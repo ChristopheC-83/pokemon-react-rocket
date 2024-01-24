@@ -1,7 +1,10 @@
+import Logo from "../components/Logo/Logo";
+
 export default function About() {
     return (
-        <div>
-            <h1 className="text-3xl font-semibold text-center mb-10">
+        <div className="min-h-screen px-8 text-white border-t bg-blue-950 border-blue-950">
+            <Logo />
+        <h1 className="mb-10 text-3xl font-semibold text-center">
                 À Propos
             </h1>
 
