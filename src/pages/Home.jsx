@@ -1,16 +1,23 @@
 import { useState, useEffect } from "react";
 import Pokecard from "../components/Pokecard/Pokecard";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { Toaster, toast } from "sonner";
+// import "react-toastify/dist/ReactToastify.css";
 
 export default function Home() {
   // States
   const [pokemons, setPokemons] = useState([]);
   const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(false);
 
   const fetchPokemons = async () => {
     setLoading(true);
-    toast("chargement...");
+    
+    const promise = () => new Promise((resolve) => setTimeout(() => resolve({ name: 'Sonner' }), 2000));
+    toast.promise(promise, {
+      loading: 'chargement en cours...',
+      
+    });
+    
     const response = await fetch(
       `https://pokeapi.co/api/v2/pokemon?limit=30&offset=${pokemons.length}`,
       {
@@ -44,7 +51,7 @@ export default function Home() {
     const pokemonDetails = await Promise.all(promises);
     setPokemons([...pokemons, ...pokemonDetails]);
     setLoading(false);
-    toast("Pokemons attrapés !");
+    toast.success("Pokemons attrapés !");
   };
 
   useEffect(() => {
@@ -54,8 +61,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen px-8 border-t bg-blue-950 border-blue-950">
-      <ToastContainer theme="dark" position="bottom-right" />
-      
+      {/* <ToastContainer theme="dark" position="bottom-right" /> */}
+      <Toaster position="bottom-center" richColors expand={true}/>
+     
       <div>
         {/* Pokemons */}
         <div className="grid grid-cols-1 gap-10 p-5 mx-auto mt-10 lg:grid-cols-3 md:grid-cols-2 max-w-7xl md:p-0">

@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import MakeForm from "../components/MakeForm/MakeForm";
+import { Toaster, toast } from "sonner";
 
 export default function CreatePokemon() {
   // Refs
@@ -85,14 +86,33 @@ export default function CreatePokemon() {
     });
 
     // Add to firebase realtime
+
+    const response = await fetch(
+      "https://pokerocket-90ef4-default-rtdb.europe-west1.firebasedatabase.app/pokemons.json",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newPokemon),
+      }
+    );
+    //Error
+    if (!response.ok) {
+      toast.error("Un erreur est survenue !");
+      return;
+    } else {
+      toast.success("Pokemon créé !");
+    }
   };
 
   return (
     <div className="min-h-screen px-8 text-white border-t bg-blue-950 border-blue-950">
+      <Toaster position="bottom-center" richColors expand={true} />
       <h1 className="mb-10 text-3xl font-semibold text-center">
         Créer un pokémon
       </h1>
-      <div className="max-w-xl p-10 m-5 mx-auto bg-yellow-pokemon rounded-xl bg-opacity-10">
+      <div className="max-w-xl p-10 py-6 m-5 mx-auto bg-gray-900 rounded-xl ">
         <MakeForm
           name={name}
           height={height}
