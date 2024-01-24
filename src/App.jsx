@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Error from "./pages/Error";
 import CreatePokemon from "./pages/CreatePokemon";
+import PokemonDetails from "./pages/PokemonDetails";
 import Main from "./Layout/Main";
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
         { index:true, element: <Home /> }, // index:true permet de définir la page par défaut
         { path: "/about", element: <About /> },
         { path: "/create-pokemon", element: <CreatePokemon /> },
+        { path: "/pokemon/:id", element: <PokemonDetails /> },
       ],
     },
     // on peut personnaliser pour une page, ou groupe, donnée
