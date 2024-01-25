@@ -4,10 +4,11 @@ import { translateName } from "../utils/translateName";
 import Pokecard from "../components/Pokecard/Pokecard";
 import { createPortal } from "react-dom";
 import MakeForm from "../components/MakeForm/MakeForm";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Toaster, toast } from "sonner";
 
 export default function PokemonDetails() {
+  const navigate = useNavigate();
   const { id } = useParams();
   // récupère l'id dans l'url
 
@@ -150,21 +151,20 @@ export default function PokemonDetails() {
 
     // 3eme phase
     // on crée une copie du pokemon pour remettre à jour si pb alors que pas connexion
-    const pokemonBefore={}
-    Object.assign(pokemonBefore, pokemon)
+    const pokemonBefore = {};
+    Object.assign(pokemonBefore, pokemon);
     // mieux que :
     // for (let key in pokemon) {
     //   pokemonBefore[key]=pokemon[key]
     // }
 
-    
     // 2eme phase
     // En mettant à jour avant envoi à DB, on a un rendu optimiste
     //  on part du principe que tout se passera bien !
     //  même mauvaise connexion : navigation fluide !
-    setPokemon(updatedPokemon);  // with optimistic rendering
-    setUpdatePokemon(false);  // with optimistic rendering
-    setLoading(false);  // with optimistic rendering
+    setPokemon(updatedPokemon); // with optimistic rendering
+    setUpdatePokemon(false); // with optimistic rendering
+    setLoading(false); // with optimistic rendering
 
     // MAJ dans firebase
 
@@ -183,7 +183,7 @@ export default function PokemonDetails() {
       toast.error("Un erreur est survenue !");
       // return; // pas utile dans un optimistic rendering
       // suite phase 3
-      setPokemon(pokemonBefore);  // with optimistic rendering... au cas où...
+      setPokemon(pokemonBefore); // with optimistic rendering... au cas où...
     }
     // fermeture modale
     //  attention, méthode lente et pas optimisée si connexion lente
@@ -200,6 +200,27 @@ export default function PokemonDetails() {
   const onDeletePokemonHandler = async () => {
     // Delete
     if (window.confirm("Voulez-vous vraiment supprimer ce pokémon ?")) {
+      setLoading(true);
+      // delete de la DB
+
+      const response = await fetch(
+        `https://pokerocket-90ef4-default-rtdb.europe-west1.firebasedatabase.app/pokemons/${id}.json`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          // body: JSON.stringify(updatedPokemon),
+        }
+      );
+      // error ?
+      if (!response.ok) {
+        toast.error("Un erreur est survenue !");
+        return;
+      }
+      toast.success("Pokemon supprimé !");
+        navigate("/")
+      
     }
   };
 
@@ -212,6 +233,7 @@ export default function PokemonDetails() {
     <div className="mx-auto max-w-7xl">
       <Pokecard pokemon={pokemon} details />
 
+      <Toaster position="bottom-center" richColors expand={true} />
       {isNaN(id) && (
         <div className="flex justify-end gap-4 mt-5">
           <div
