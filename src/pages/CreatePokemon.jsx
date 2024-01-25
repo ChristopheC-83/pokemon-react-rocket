@@ -1,8 +1,10 @@
 import { useRef } from "react";
 import MakeForm from "../components/MakeForm/MakeForm";
 import { Toaster, toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export default function CreatePokemon() {
+  const navigate = useNavigate();
   // Refs
   const name = useRef("");
   const height = useRef("");
@@ -97,13 +99,21 @@ export default function CreatePokemon() {
         body: JSON.stringify(newPokemon),
       }
     );
-    //Error
+    //if Error
     if (!response.ok) {
       toast.error("Un erreur est survenue !");
       return;
     } else {
       toast.success("Pokemon créé !");
     }
+
+    // on recupère l'id de la nouvelle création
+    //on renomme le nom de l'objet Firebase reçu pour ne pas faire d'amalgame avec le Nom du pokemon
+    const { name: newPokemonName } = await response.json();
+
+    // rediriger vers le nouveau pokemon
+
+    navigate(`/pokemon/${newPokemonName}`)
   };
 
   return (

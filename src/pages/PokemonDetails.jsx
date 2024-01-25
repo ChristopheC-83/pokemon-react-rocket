@@ -5,7 +5,7 @@ import Pokecard from "../components/Pokecard/Pokecard";
 import { createPortal } from "react-dom";
 import MakeForm from "../components/MakeForm/MakeForm";
 import { useParams } from "react-router-dom";
-import { toast } from "react-toastify";
+import { Toaster, toast } from "sonner";
 
 export default function PokemonDetails() {
   const { id } = useParams();
@@ -49,15 +49,28 @@ export default function PokemonDetails() {
     if (loading) return;
     setLoading(true);
 
+    let url = `https://pokeapi.co/api/v2/pokemon/${id}`;
+    // si l'id est un nombre, on fetch le pokemon par son id
+    // sinon on fetch le pokemon par son nom firebase
+    if (isNaN(id)) {
+      url = `https://pokerocket-90ef4-default-rtdb.europe-west1.firebasedatabase.app/pokemons/${id}.json`;
+    }
+
     try {
-      const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`, {
+      const response = await fetch(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
       });
 
-      setPokemon(await response.json());
+      const data = await response.json();
+      // // si je crée un pokemon, on lui ajoute un id
+      if (isNaN(id)) {
+        data.id = id;
+      }
+
+      setPokemon(data);
       setLoading(false);
     } catch {
       setLoading(false);
@@ -68,6 +81,8 @@ export default function PokemonDetails() {
   const onUpdatePokemonHandler = async () => {
     const updatedPokemon = {
       // General
+      id,
+      // équivaut à id :id
       name: name.current.value,
       height: height.current.value / 10, // cm to decimeter
       weight: weight.current.value * 10, // kg to hectogram
@@ -132,15 +147,63 @@ export default function PokemonDetails() {
         });
       }
     });
+
+    // 3eme phase
+    // on crée une copie du pokemon pour remettre à jour si pb alors que pas connexion
+    const pokemonBefore={}
+    Object.assign(pokemonBefore, pokemon)
+    // mieux que :
+    // for (let key in pokemon) {
+    //   pokemonBefore[key]=pokemon[key]
+    // }
+
+    
+    // 2eme phase
+    // En mettant à jour avant envoi à DB, on a un rendu optimiste
+    //  on part du principe que tout se passera bien !
+    //  même mauvaise connexion : navigation fluide !
+    setPokemon(updatedPokemon);  // with optimistic rendering
+    setUpdatePokemon(false);  // with optimistic rendering
+    setLoading(false);  // with optimistic rendering
+
+    // MAJ dans firebase
+
+    const response = await fetch(
+      `https://pokerocket-90ef4-default-rtdb.europe-west1.firebasedatabase.app/pokemons/${id}.json`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedPokemon),
+      }
+    );
+    // error ?
+    if (!response.ok) {
+      toast.error("Un erreur est survenue !");
+      // return; // pas utile dans un optimistic rendering
+      // suite phase 3
+      setPokemon(pokemonBefore);  // with optimistic rendering... au cas où...
+    }
+    // fermeture modale
+    //  attention, méthode lente et pas optimisée si connexion lente
+    //  on peut utiliser l'optimistic rendering
+    // on met à jour le pokemon avant même l'envoi à firebase !
+    // avant le fectch !
+
+    // 1ere phase
+    // setUpdatePokemon(false);  // without optimistic rendering
+    // setLoading(false);  // without optimistic rendering
+    // setPokemon(updatedPokemon);  // without optimistic rendering
   };
+
   const onDeletePokemonHandler = async () => {
     // Delete
     if (window.confirm("Voulez-vous vraiment supprimer ce pokémon ?")) {
     }
   };
 
-  if (loading )
-    return <div className="text-center">Chargement...</div>;
+  if (loading) return <div className="text-center">Chargement...</div>;
 
   if (!pokemon || !pokemon.name)
     return <div className="text-center">Pokemon non trouvé</div>;
